@@ -1,0 +1,15 @@
+Dependencies
+javax.validation
+<!-- https://mvnrepository.com/artifact/io.springfox/springfox-swagger-ui -->
+io.springfox
+springfox-swagger-ui
+<version>3.0.0</version>
+
+
+
+
+
+
+
+
+
