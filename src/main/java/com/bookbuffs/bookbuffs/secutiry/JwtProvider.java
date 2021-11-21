@@ -29,7 +29,7 @@ public class JwtProvider {
     public void init() {
         try {
             keyStore = KeyStore.getInstance("JKS");
-            InputStream resourceAsStream = getClass().getResourceAsStream("/bookbuffsapp.jks");
+            InputStream resourceAsStream = getClass().getResourceAsStream("/bookbuffsapp.jks.jks");
             keyStore.load(resourceAsStream, "secret".toCharArray());
         } catch (KeyStoreException | CertificateException | NoSuchAlgorithmException | IOException e) {
             throw new SpringBookbuffsException("Exception occurred while loading keystore", e);
@@ -48,7 +48,7 @@ public class JwtProvider {
 
     private PrivateKey getPrivateKey() {
         try {
-            return (PrivateKey) keyStore.getKey("bookbuffsapp", "secret".toCharArray());
+            return (PrivateKey) keyStore.getKey("bookbuffsapp.jks", "secret".toCharArray());
         } catch (KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException e) {
             throw new SpringBookbuffsException("Exception occured while retrieving public key from keystore", e);
         }
@@ -64,7 +64,7 @@ public class JwtProvider {
 
     private PublicKey getPublicKey() throws KeyStoreException {
         try {
-            return keyStore.getCertificate("bookbuffsapp").getPublicKey();
+            return keyStore.getCertificate("bookbuffsapp.jks").getPublicKey();
         }catch (KeyStoreException e){
             throw new KeyStoreException("Exception occured whule retrieving public key from keystore ");
         }
