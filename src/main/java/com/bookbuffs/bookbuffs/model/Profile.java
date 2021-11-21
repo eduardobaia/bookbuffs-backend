@@ -7,6 +7,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
 
+import java.util.Date;
+
 import static javax.persistence.FetchType.LAZY;
 import static javax.persistence.GenerationType.IDENTITY;
 
@@ -18,5 +20,8 @@ public class Profile {
     private Long profileId;
     @OneToOne(fetch = LAZY)
     private User user;
+    private String lang;
+    private Date dateBorn;
+
 
 }
