@@ -13,8 +13,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.*;
 import java.security.cert.CertificateException;
+import java.sql.Date;
+import java.time.Instant;
 
 import static io.jsonwebtoken.Jwts.parser;
+import static java.util.Date.from;
 
 
 @Service
@@ -29,7 +32,8 @@ public class JwtProvider {
     public void init() {
         try {
             keyStore = KeyStore.getInstance("JKS");
-            InputStream resourceAsStream = getClass().getResourceAsStream("/bookbuffsapp.jks.jks");
+          //  InputStream resourceAsStream = getClass().getResourceAsStream("../../bookbuffsapp.jks");
+            InputStream resourceAsStream = getClass().getResourceAsStream("resources/bookbuffsapp.jks");
             keyStore.load(resourceAsStream, "secret".toCharArray());
         } catch (KeyStoreException | CertificateException | NoSuchAlgorithmException | IOException e) {
             throw new SpringBookbuffsException("Exception occurred while loading keystore", e);
@@ -42,13 +46,16 @@ public class JwtProvider {
         User principal =   (User) authentication.getPrincipal();
         return Jwts.builder()
                 .setSubject(principal.getUsername())
+                .setIssuedAt(from(Instant.now()))
                 .signWith(getPrivateKey())
+                .setExpiration(Date.from(Instant.now().plusMillis(jwtExpirationInMillis)))
                 .compact();
     }
 
+
     private PrivateKey getPrivateKey() {
         try {
-            return (PrivateKey) keyStore.getKey("bookbuffsapp.jks", "secret".toCharArray());
+            return (PrivateKey) keyStore.getKey("bookbuffsapp", "secret".toCharArray());
         } catch (KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException e) {
             throw new SpringBookbuffsException("Exception occured while retrieving public key from keystore", e);
         }
@@ -64,7 +71,7 @@ public class JwtProvider {
 
     private PublicKey getPublicKey() throws KeyStoreException {
         try {
-            return keyStore.getCertificate("bookbuffsapp.jks").getPublicKey();
+            return keyStore.getCertificate("bookbuffsapp").getPublicKey();
         }catch (KeyStoreException e){
             throw new KeyStoreException("Exception occured whule retrieving public key from keystore ");
         }
@@ -78,6 +85,20 @@ public class JwtProvider {
                 .getBody();
 
         return claims.getSubject();
+    }
+
+    public Long getJwtExpirationInMillis() {
+        return jwtExpirationInMillis;
+    }
+
+    public String generateTokenWithUserName(String username) {
+        return Jwts.builder()
+                .setSubject(username)
+                .setIssuedAt(from(Instant.now()))
+                .signWith(getPrivateKey())
+                .setExpiration(Date.from(Instant.now().plusMillis(jwtExpirationInMillis)))
+                .compact();
+
     }
 
 }

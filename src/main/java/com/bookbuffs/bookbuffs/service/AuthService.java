@@ -1,5 +1,8 @@
 package com.bookbuffs.bookbuffs.service;
 
+import com.bookbuffs.bookbuffs.dto.AuthenticationResponse;
+import com.bookbuffs.bookbuffs.dto.LoginRequest;
+import com.bookbuffs.bookbuffs.dto.RefreshTokenRequest;
 import com.bookbuffs.bookbuffs.dto.RegisterRequest;
 import com.bookbuffs.bookbuffs.excepetions.SpringBookbuffsException;
 import com.bookbuffs.bookbuffs.model.NotificationEmail;
@@ -7,16 +10,24 @@ import com.bookbuffs.bookbuffs.model.User;
 import com.bookbuffs.bookbuffs.model.VerificationToken;
 import com.bookbuffs.bookbuffs.repository.UserRepository;
 import com.bookbuffs.bookbuffs.repository.VerificationTokenRepository;
+import com.bookbuffs.bookbuffs.secutiry.JwtProvider;
+import io.jsonwebtoken.Jwts;
 import lombok.AllArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Date;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
+
+import static java.util.Date.from;
 
 @Service
 @AllArgsConstructor
@@ -26,6 +37,10 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final VerificationTokenRepository verificationTokenRepository;
     private final MailService mailService;
+    private final AuthenticationManager authenticationManager;
+    private final JwtProvider jwtProvider;
+    private final RefreshTokenService refreshTokenService;
+
 
     @Transactional
     public User getCurrentUser(){
@@ -79,6 +94,34 @@ public class AuthService {
         User user = userRepository.findByUsername(username).orElseThrow(()-> new SpringBookbuffsException("User not found with name -"+ username));
         user.setEnabled(true);
         userRepository.save(user);
+
+    }
+
+
+    public AuthenticationResponse login(LoginRequest loginRequest) {
+        Authentication authenticate = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+
+        SecurityContextHolder.getContext().setAuthentication(authenticate);
+        String token = jwtProvider.generateToken(authenticate);
+        //    return new AuthenticationResponse(token, loginRequest.getUsername());
+        return AuthenticationResponse.builder()
+                .authenticationToken(token)
+                .refreshToken(refreshTokenService.generateRefreshToken().getToken())
+                .expiresAt(Instant.now().plusMillis(jwtProvider.getJwtExpirationInMillis()))
+                .username(loginRequest.getUsername())
+                .build();
+    }
+
+    public AuthenticationResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {
+        refreshTokenService.validateRefreshToken(refreshTokenRequest.getRefreshToken());
+        String token =  jwtProvider.generateTokenWithUserName(refreshTokenRequest.getUsername());
+        return AuthenticationResponse.builder()
+                .authenticationToken(token)
+                .refreshToken(refreshTokenRequest.getRefreshToken())
+                .expiresAt(Instant.now().plusMillis(jwtProvider.getJwtExpirationInMillis()))
+                .username(refreshTokenRequest.getUsername())
+                .build();
 
     }
 
