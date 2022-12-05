@@ -1,5 +1,6 @@
 package com.bookbuffs.bookbuffs.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,6 +25,7 @@ public class Book {
     @Id
     @GeneratedValue(strategy = IDENTITY)
     private Long id;
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     @OneToOne(fetch = LAZY)
     private User user;
     private String name;

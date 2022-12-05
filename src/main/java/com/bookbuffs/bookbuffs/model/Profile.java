@@ -23,5 +23,10 @@ public class Profile {
     private String lang;
     private Date dateBorn;
 
+    //adress
+    //preferences
+    //lastLogin
+
+
 
 }

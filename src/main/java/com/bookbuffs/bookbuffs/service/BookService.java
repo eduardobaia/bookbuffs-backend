@@ -28,4 +28,9 @@ public class BookService {
 
     }
 
+    public void replace(Book book){
+      bookRepository.save(book);
+    }
+
+
 }
